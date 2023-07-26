@@ -63,10 +63,10 @@ TEST_CASE("test_export_table") {
 TEST_CASE("test_sections") {
     spdlog::info("Ready to test sections.");
 
-    FILE* fpe64 = pe_open("../../tests/examples/kernel32_64.dll");
-    REQUIRE(fpe64 != NULL);
-    pe64_t* ppe64 = (pe64_t*)pe_parse_headers(fpe64);
-    size_t null_size = pe_get_section_null_size((pe_t*)ppe64, ".data");
+    FILE* fpe32 = pe_open("../../tests/pe_header_32.exe");
+    REQUIRE(fpe32 != NULL);
+    pe32_t* ppe32 = (pe32_t*)pe_parse_headers(fpe32);
+    size_t null_size = pe_get_section_null_size((pe_t*)ppe32, ".text");
     spdlog::info(null_size);
 }
 
