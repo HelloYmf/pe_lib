@@ -1,6 +1,7 @@
 #include <corecrt.h>
 #define CATCH_CONFIG_MAIN
 #include "catch.hpp"
+#include <stdio.h>
 // #include <spdlog/spdlog.h>
 
 // #include <pe_parser.h>
