@@ -36,3 +36,18 @@ bool pe_check(FILE *executable)
 
   return !memcmp(signature, PE_SIGNATURE, PE_SIGNATURE_SIZE);
 }
+
+bool pe_write(const char* filename, char* buffer, size_t size)
+{
+  FILE* file = fopen(filename, "w+");
+
+  if (file != NULL) {
+      size_t real_written = fwrite(buffer, sizeof(char), size, file);
+      if (real_written != size)
+          return false;
+      fclose(file);
+  } else {
+      return false;
+  }
+  return true;
+}

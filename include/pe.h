@@ -283,4 +283,27 @@ typedef struct pe_export_table {
     int32_t   AddressOfNameOrdinals;  // RVA from base of image
 } pe_export_table_t;
 
+typedef struct _MYIMAGE_IMPORT_DESCRIPTOR {
+    union {
+        uint32_t Characteristics;
+        uint32_t OriginalFirstThunk;
+    };
+    uint32_t TimeDateStamp;
+    uint32_t ForwarderChain;
+    uint32_t Name;
+    uint32_t FirstThunk;
+} MYIMAGE_IMPORT_DESCRIPTOR, *PMYIMAGE_IMPORT_DESCRIPTOR;
+
+typedef struct _IMAGE_DELAY_IMPORT_DESCRIPTOR
+{
+    uint32_t grAttrs;
+    uint32_t DLLName;
+    uint32_t Hmod;
+    uint32_t IAT;
+    uint32_t INT;
+    uint32_t BoundIAT;
+    uint32_t UnloadIAT;
+    uint32_t TimeDateStamp;
+}IMAGE_DELAY_IMPORT_DESCRIPTOR, *PIMAGE_DELAY_IMPORT_DESCRIPTOR;
+
 #endif

@@ -4,6 +4,7 @@
 
 #include <stdlib.h>
 #include <Windows.h>
+#include <winnt.h>
 
 static void mem_error(void)
 {
@@ -179,6 +180,7 @@ char* pe_get_image_buffer(pe_t* pe)
     }
     return base;
 }
+
 void pe_free_buffer(char* buffer) 
 {
     if(!buffer)
@@ -186,4 +188,36 @@ void pe_free_buffer(char* buffer)
         free(buffer);
         buffer = NULL;
     }
+}
+
+char* pe_image_buffer_to_file_buffer32(char* image_buffer, size_t* out_file_size)
+{
+    PIMAGE_DOS_HEADER image_dos_header = (PIMAGE_DOS_HEADER)image_buffer;
+    PIMAGE_NT_HEADERS32 image_nt_headers = (PIMAGE_NT_HEADERS32)(image_buffer + image_dos_header->e_lfanew);
+    PIMAGE_SECTION_HEADER image_section_header = (PIMAGE_SECTION_HEADER)((char*)image_nt_headers + sizeof(PIMAGE_NT_HEADERS32));
+    
+    size_t file_size = image_section_header[image_nt_headers->FileHeader.NumberOfSections - 1].PointerToRawData + 
+                        image_section_header[image_nt_headers->FileHeader.NumberOfSections - 1].SizeOfRawData;
+    *out_file_size = file_size;
+
+    char* file_buffer = (char*)malloc(file_size);
+    if(!file_buffer) 
+    {
+        return NULL;
+    }
+
+    // copy file headers
+    memcpy(file_buffer, image_buffer, image_nt_headers->OptionalHeader.SizeOfHeaders);
+
+    // copy section datas
+    for(int i = 0; i < image_nt_headers->FileHeader.NumberOfSections; i++) 
+    {
+        memcpy(
+            file_buffer + image_section_header[i].PointerToRawData, 
+            image_buffer + image_section_header[i].VirtualAddress,
+            image_section_header[i].Misc.VirtualSize
+        );
+    }
+
+    return file_buffer;
 }
