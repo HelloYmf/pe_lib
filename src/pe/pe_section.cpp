@@ -5,6 +5,7 @@
 #include <Windows.h>
 
 #include <iostream>
+#include <winnt.h>
 
 size_t pe_get_section_null_size(pe_t* pe, const char* sec_name)
 {
@@ -273,8 +274,164 @@ char* pe_extend_section32(pe32_t* pe, uint32_t idx, uint32_t size)
     // fix resource table -- todo
     if (new_nt_header->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_RESOURCE].VirtualAddress)
     {
-        PIMAGE_RESOURCE_DIRECTORY pTopResDir = (PIMAGE_RESOURCE_DIRECTORY)(new_image_buffer + new_nt_header->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_RESOURCE].VirtualAddress);
-        // MoveTheResource( pTopResDir, pTopResDir, iTheBreakRVA, iExpandVsize);
+        uint32_t resouce_base = (uint32_t)(new_image_buffer + new_nt_header->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_RESOURCE].VirtualAddress);
+        // 解析最顶层，类型（系统类型都是id，自定义类型都是Name）
+        PIMAGE_RESOURCE_DIRECTORY first_dir = (PIMAGE_RESOURCE_DIRECTORY)resouce_base;
+        uint32_t first_name_num = first_dir->NumberOfNamedEntries;
+        uint32_t first_bak_name_num = first_name_num;
+        uint32_t first_id_num = first_dir->NumberOfIdEntries;
+        // 处理所有的自定义资源（NAME）
+        PIMAGE_RESOURCE_DIRECTORY_ENTRY first_name_entry = (PIMAGE_RESOURCE_DIRECTORY_ENTRY)((uint32_t)first_dir + sizeof(IMAGE_RESOURCE_DIRECTORY));
+        while(first_name_num)
+        {
+            // 打印name，0x7FFFFF
+            if(first_name_entry->NameIsString)
+            {
+                PIMAGE_RESOURCE_DIR_STRING_U wname = (PIMAGE_RESOURCE_DIR_STRING_U)(resouce_base + first_name_entry->NameOffset);
+                printf("resource name type: %S\r\n", wname->NameString);
+                printf("\r\n");
+            }
+            if(first_name_entry->DataIsDirectory)
+            {
+                // 处理第二级，名字
+                PIMAGE_RESOURCE_DIRECTORY second_dir = (PIMAGE_RESOURCE_DIRECTORY)(resouce_base + first_name_entry->OffsetToDirectory);
+                uint32_t second_name_num = second_dir->NumberOfNamedEntries;
+                uint32_t second_bak_name_num = second_name_num;
+                uint32_t second_id_num = second_dir->NumberOfIdEntries;
+
+                PIMAGE_RESOURCE_DIRECTORY_ENTRY second_name_entry = (PIMAGE_RESOURCE_DIRECTORY_ENTRY)((uint32_t)second_dir + sizeof(IMAGE_RESOURCE_DIRECTORY));
+
+                while(second_name_num)
+                {
+                    // 这个为name的很少见
+                    
+                    second_name_entry++;
+                    second_name_num--;
+                }
+
+                PIMAGE_RESOURCE_DIRECTORY_ENTRY second_id_entry = (PIMAGE_RESOURCE_DIRECTORY_ENTRY)((uint32_t)second_dir + sizeof(IMAGE_RESOURCE_DIRECTORY) + second_bak_name_num * sizeof(IMAGE_RESOURCE_DIRECTORY_ENTRY));
+
+                while(second_id_num)
+                {
+                    printf("resource name: %d\r\n", second_id_entry->Id);
+                    if(second_id_entry->DataIsDirectory)
+                    {
+                        // 处理第三级别，语言
+                        PIMAGE_RESOURCE_DIRECTORY third_dir = (PIMAGE_RESOURCE_DIRECTORY)(resouce_base + second_id_entry->OffsetToDirectory);
+                        uint32_t third_name_num = third_dir->NumberOfNamedEntries;
+                        uint32_t third_bak_name_num = third_name_num;
+                        uint32_t third_id_num = third_dir->NumberOfIdEntries;
+
+                        PIMAGE_RESOURCE_DIRECTORY_ENTRY third_name_entry = (PIMAGE_RESOURCE_DIRECTORY_ENTRY)((uint32_t)third_dir + sizeof(IMAGE_RESOURCE_DIRECTORY));
+                        while(third_name_num)
+                        {
+                            
+                            third_name_entry++;
+                            third_name_num--;
+                        }
+
+                        PIMAGE_RESOURCE_DIRECTORY_ENTRY third_id_entry = (PIMAGE_RESOURCE_DIRECTORY_ENTRY)((uint32_t)third_dir + sizeof(IMAGE_RESOURCE_DIRECTORY) + third_bak_name_num * sizeof(IMAGE_RESOURCE_DIRECTORY_ENTRY));
+                        while(third_id_num)
+                        {
+
+                            printf("resource language: %d\r\n", third_id_entry->Id);
+
+                            if(!third_id_entry->DataIsDirectory)
+                            {
+                                PIMAGE_RESOURCE_DATA_ENTRY data = (PIMAGE_RESOURCE_DATA_ENTRY)(resouce_base + third_id_entry->OffsetToData);
+                                data->OffsetToData += (data->OffsetToData > fix_rva ? new_rva_size : 0);
+                                printf("data rva: %x, size: %x\r\n", data->OffsetToData, data->Size);
+                            }
+                            // 是目录就出错了
+
+                            third_id_entry++;
+                            third_id_num--;
+                        }
+                    }
+                    // 其他就出错
+                    second_id_entry++;
+                    second_id_num--;
+                }
+                second_name_entry++;
+                second_id_entry++;
+            }
+            first_name_entry++;
+            first_name_num--;
+        }
+        // 处理所有系统资源（ID）
+        PIMAGE_RESOURCE_DIRECTORY_ENTRY first_id_entry = (PIMAGE_RESOURCE_DIRECTORY_ENTRY)((uint32_t)first_dir + sizeof(IMAGE_RESOURCE_DIRECTORY) + first_bak_name_num * sizeof(IMAGE_RESOURCE_DIRECTORY_ENTRY));
+        while(first_id_num)
+        {
+            printf("resource id type: %d\r\n", first_id_entry->Id);
+
+            if(first_id_entry->DataIsDirectory)
+            {
+                // 处理第二级，名字
+                PIMAGE_RESOURCE_DIRECTORY second_dir = (PIMAGE_RESOURCE_DIRECTORY)(resouce_base + first_id_entry->OffsetToDirectory);
+                uint32_t second_name_num = second_dir->NumberOfNamedEntries;
+                uint32_t second_bak_name_num = second_name_num;
+                uint32_t second_id_num = second_dir->NumberOfIdEntries;
+
+                PIMAGE_RESOURCE_DIRECTORY_ENTRY second_name_entry = (PIMAGE_RESOURCE_DIRECTORY_ENTRY)((uint32_t)second_dir + sizeof(IMAGE_RESOURCE_DIRECTORY));
+                
+                while(second_name_num)
+                {
+
+
+                    second_name_entry++;
+                    second_name_num--;
+                }
+
+                PIMAGE_RESOURCE_DIRECTORY_ENTRY second_id_entry = (PIMAGE_RESOURCE_DIRECTORY_ENTRY)((uint32_t)second_dir + sizeof(IMAGE_RESOURCE_DIRECTORY) + second_bak_name_num * sizeof(IMAGE_RESOURCE_DIRECTORY_ENTRY));
+                while(second_id_num)
+                {
+
+                    printf("resource name: %d\r\n", second_id_entry->Id);
+                    if(second_id_entry->DataIsDirectory)
+                    {
+                        // 处理第三级别，语言
+                        PIMAGE_RESOURCE_DIRECTORY third_dir = (PIMAGE_RESOURCE_DIRECTORY)(resouce_base + second_id_entry->OffsetToDirectory);
+                        uint32_t third_name_num = third_dir->NumberOfNamedEntries;
+                        uint32_t third_bak_name_num = third_name_num;
+                        uint32_t third_id_num = third_dir->NumberOfIdEntries;
+
+                        PIMAGE_RESOURCE_DIRECTORY_ENTRY third_name_entry = (PIMAGE_RESOURCE_DIRECTORY_ENTRY)((uint32_t)third_dir + sizeof(IMAGE_RESOURCE_DIRECTORY));
+                        while(third_name_num)
+                        {
+                            
+                            third_name_entry++;
+                            third_name_num--;
+                        }
+
+                        PIMAGE_RESOURCE_DIRECTORY_ENTRY third_id_entry = (PIMAGE_RESOURCE_DIRECTORY_ENTRY)((uint32_t)third_dir + sizeof(IMAGE_RESOURCE_DIRECTORY) + third_bak_name_num * sizeof(IMAGE_RESOURCE_DIRECTORY_ENTRY));
+                        while(third_id_num)
+                        {
+
+                            printf("resource language: %d\r\n", third_id_entry->Id);
+
+                            if(!third_id_entry->DataIsDirectory)
+                            {
+                                PIMAGE_RESOURCE_DATA_ENTRY data = (PIMAGE_RESOURCE_DATA_ENTRY)(resouce_base + third_id_entry->OffsetToData);
+                                data->OffsetToData += (data->OffsetToData > fix_rva ? new_rva_size : 0);
+                                printf("data rva: %x, size: %x\r\n", data->OffsetToData, data->Size);
+                            }
+                            // 是目录就出错了
+
+                            third_id_entry++;
+                            third_id_num--;
+                        }
+
+                    }
+
+                    second_id_entry++;
+                    second_id_num--;
+                }
+            
+            }
+
+            first_id_entry++;
+            first_id_num--;
+        }
     }
 
     // fix exception table(only x64)
