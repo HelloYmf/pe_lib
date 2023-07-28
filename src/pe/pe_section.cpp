@@ -4,13 +4,17 @@
 #include <stdlib.h>
 #include <Windows.h>
 
+#include <iostream>
+
 size_t pe_get_section_null_size(pe_t* pe, const char* sec_name)
 {
     int i = 0;
     for(; i < pe->number_of_sections; i++)
     {
         if(strcmp(pe->section_header[i]->name, sec_name) == 0)
+        {
             break;
+        }
     }
     if(i == pe->number_of_sections)
     {
@@ -19,13 +23,6 @@ size_t pe_get_section_null_size(pe_t* pe, const char* sec_name)
     }
     
     uint32_t virtual_size = pe->section_header[i]->virtual_size;
-
-    if(i == pe->number_of_sections-1)
-    {
-        size_t size_of_image = pe->type == MAGIC_32BIT ?  ((pe32_t*)pe)->optional_header->size_of_image : ((pe64_t*)pe)->optional_header->size_of_image;
-        return size_of_image - (pe->section_header[i]->virtual_address + virtual_size);
-    }
-
     return pe->section_header[i+1]->virtual_address - (pe->section_header[i]->virtual_address + virtual_size);
 }
 
@@ -49,18 +46,17 @@ char* pe_extend_section32(pe32_t* pe, uint32_t idx, uint32_t size)
             + (size % file_align != 0 ? 1 : 0) ) * file_align;
     new_foa_size += (new_foa_size == 0 ? file_align : 0);
 
-    printf("new aligin rva: %08x, new align foa: %08x\r\n", new_rva_size, new_foa_size);
-
     new_image_size = pe->optional_header->size_of_image + new_rva_size;
     new_image_buffer = (char*)malloc(new_image_size);
     if(!new_image_buffer)
         return NULL;
+    memset(new_image_buffer, 0, new_image_size);
 
     // get image buffer
     char* old_image_buffer = pe_get_image_buffer((pe_t*)pe);
     PIMAGE_DOS_HEADER old_dos_header = (PIMAGE_DOS_HEADER)old_image_buffer;
     PIMAGE_NT_HEADERS32 old_nt_header = (PIMAGE_NT_HEADERS32)(old_image_buffer + old_dos_header->e_lfanew);
-    PIMAGE_SECTION_HEADER old_section_header = (PIMAGE_SECTION_HEADER)((char*)old_nt_header + sizeof(PIMAGE_NT_HEADERS32));
+    PIMAGE_SECTION_HEADER old_section_header = (PIMAGE_SECTION_HEADER)((char*)old_nt_header + sizeof(IMAGE_NT_HEADERS32));
 
     // copy old file headers -> new image buffer
     memcpy(new_image_buffer, old_image_buffer, pe->optional_header->size_of_headers);
@@ -68,7 +64,7 @@ char* pe_extend_section32(pe32_t* pe, uint32_t idx, uint32_t size)
     // fix file headers
     PIMAGE_DOS_HEADER new_dos_header = (PIMAGE_DOS_HEADER)new_image_buffer;
     PIMAGE_NT_HEADERS32 new_nt_header = (PIMAGE_NT_HEADERS32)(new_image_buffer + new_dos_header->e_lfanew);
-    PIMAGE_SECTION_HEADER new_section_header = (PIMAGE_SECTION_HEADER)((char*)new_nt_header + sizeof(PIMAGE_NT_HEADERS32));
+    PIMAGE_SECTION_HEADER new_section_header = (PIMAGE_SECTION_HEADER)((char*)new_nt_header + sizeof(IMAGE_NT_HEADERS32));
 
     // 目标节区头
     PIMAGE_SECTION_HEADER new_add_section_header = new_section_header + idx;
@@ -89,7 +85,7 @@ char* pe_extend_section32(pe32_t* pe, uint32_t idx, uint32_t size)
     // fix other section headers
     for(int i = idx + 1; i < new_nt_header->FileHeader.NumberOfSections; i++)
     {
-        PIMAGE_SECTION_HEADER curr_section_header = new_add_section_header + i;  
+        PIMAGE_SECTION_HEADER curr_section_header = new_section_header + i;  
         curr_section_header->VirtualAddress += (curr_section_header->VirtualAddress > 0
             ? new_rva_size : 0);  
         curr_section_header->PointerToRawData += (curr_section_header->PointerToRawData > 0
@@ -139,14 +135,14 @@ char* pe_extend_section32(pe32_t* pe, uint32_t idx, uint32_t size)
             pNewExportDirectory->Base >= fix_rva
             ? new_rva_size : 0);
 
-        uint32_t pNames = (uint32_t)( new_image_buffer + pNewExportDirectory->AddressOfNames);
+        uint32_t pNames = (uint32_t)( (size_t)new_image_buffer + pNewExportDirectory->AddressOfNames);
 
         for ( int i = 0; i < pNewExportDirectory->NumberOfNames; i++)
         {
             pNames += (pNames >= fix_rva ? new_rva_size : 0);
         }
 
-        uint32_t pFuntions = (uint32_t)( new_image_buffer + pNewExportDirectory->AddressOfFunctions);
+        uint32_t pFuntions = (uint32_t)( (size_t)new_image_buffer + pNewExportDirectory->AddressOfFunctions);
         for ( int i = 0; i < pNewExportDirectory->NumberOfFunctions; i++)
         {
             pFuntions += (pFuntions >= fix_rva ? new_rva_size : 0);
@@ -184,24 +180,35 @@ char* pe_extend_section32(pe32_t* pe, uint32_t idx, uint32_t size)
     if(new_nt_header->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_BASERELOC].VirtualAddress)
     {
         PIMAGE_BASE_RELOCATION pBaseRelocal = (PIMAGE_BASE_RELOCATION)( new_image_buffer + new_nt_header->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_BASERELOC].VirtualAddress);
-        int iCount = new_nt_header->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_BASERELOC].Size / sizeof(IMAGE_BASE_RELOCATION);
-        while ( pBaseRelocal->VirtualAddress && iCount)
+        // int iCount = new_nt_header->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_BASERELOC].Size / sizeof(IMAGE_BASE_RELOCATION);
+        while ( pBaseRelocal->VirtualAddress && pBaseRelocal->SizeOfBlock)
         {
             typedef struct  
             {
-                short Offset:12;
-                short Type:4;
+                unsigned short Offset:12;
+                unsigned short Type:4;
             }WORD_RELOCAL, *PWORD_RELOCAL;
             if ( pBaseRelocal->VirtualAddress >= fix_rva)
             {
                 pBaseRelocal->VirtualAddress += new_rva_size;
-                PWORD_RELOCAL pRelocalWord = (PWORD_RELOCAL)((char*)pBaseRelocal + sizeof(IMAGE_BASE_RELOCATION));
-                for ( int i = 0; i < pBaseRelocal->SizeOfBlock / sizeof(WORD_RELOCAL); i++)
+            }
+            PWORD_RELOCAL pRelocalWord = (PWORD_RELOCAL)((char*)pBaseRelocal + sizeof(IMAGE_BASE_RELOCATION));
+            for ( int i = 0; i < pBaseRelocal->SizeOfBlock / sizeof(WORD_RELOCAL); i++)
+            {
+                if(pBaseRelocal->VirtualAddress + pRelocalWord->Offset >= fix_rva)
                 {
-                    *(short*)(new_image_buffer + pBaseRelocal->VirtualAddress + pRelocalWord->Offset) += (
-                        pRelocalWord->Type == IMAGE_REL_BASED_HIGHLOW && pRelocalWord->Offset
-                        ? new_rva_size : 0);
+                    pRelocalWord->Offset += new_rva_size;
                 }
+
+                char* reloc_addr = new_image_buffer + pBaseRelocal->VirtualAddress + pRelocalWord->Offset;
+                uint32_t dst_addr_rva = *(uint32_t*)(reloc_addr) - old_nt_header->OptionalHeader.ImageBase;
+
+                if(dst_addr_rva >= fix_rva)
+                {
+                    *(uint32_t*)(reloc_addr) += (
+                        pRelocalWord->Type == IMAGE_REL_BASED_HIGHLOW ? new_rva_size : 0);
+                }
+                pRelocalWord++;
             }
             pBaseRelocal = (PIMAGE_BASE_RELOCATION)( (char*)pBaseRelocal + pBaseRelocal->SizeOfBlock);
 
@@ -223,13 +230,18 @@ char* pe_extend_section32(pe32_t* pe, uint32_t idx, uint32_t size)
     // fix TLS
     if(new_nt_header->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_TLS].VirtualAddress)
     {
+
+        // 这里存的值都是加了偏移后的，重定位过了就不需要再修复了
+
         PIMAGE_TLS_DIRECTORY pTlsDir = (PIMAGE_TLS_DIRECTORY)(new_image_buffer + new_nt_header->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_TLS].VirtualAddress);
-        pTlsDir->AddressOfCallBacks += pTlsDir->AddressOfCallBacks >= fix_rva + new_nt_header->OptionalHeader.ImageBase ? new_rva_size : 0;
-        pTlsDir->AddressOfIndex += pTlsDir->AddressOfIndex >= fix_rva + new_nt_header->OptionalHeader.ImageBase ? new_rva_size : 0;
-        pTlsDir->StartAddressOfRawData += pTlsDir->StartAddressOfRawData >= fix_rva + new_nt_header->OptionalHeader.ImageBase ? new_rva_size : 0;
-        pTlsDir->EndAddressOfRawData += pTlsDir->EndAddressOfRawData >= fix_rva + new_nt_header->OptionalHeader.ImageBase ? new_rva_size : 0;
-        uint32_t* pCallBacks = (uint32_t*)( new_image_buffer + pTlsDir->AddressOfCallBacks);
-        for ( int i = 0; *pCallBacks; i++)
+        // pTlsDir->AddressOfCallBacks += pTlsDir->AddressOfCallBacks >= fix_rva + new_nt_header->OptionalHeader.ImageBase ? new_rva_size : 0;
+        // pTlsDir->AddressOfIndex += pTlsDir->AddressOfIndex >= fix_rva + new_nt_header->OptionalHeader.ImageBase ? new_rva_size : 0;
+        // pTlsDir->StartAddressOfRawData += pTlsDir->StartAddressOfRawData >= fix_rva + new_nt_header->OptionalHeader.ImageBase ? new_rva_size : 0;
+        // pTlsDir->EndAddressOfRawData += pTlsDir->EndAddressOfRawData >= fix_rva + new_nt_header->OptionalHeader.ImageBase ? new_rva_size : 0;
+        uint32_t* tmp_pCallBacks = (uint32_t*)( new_image_buffer + pTlsDir->AddressOfCallBacks);
+        uint32_t* pCallBacks = (uint32_t*)((char*)tmp_pCallBacks - old_nt_header->OptionalHeader.ImageBase);
+        
+        for ( int i = 0; *(pCallBacks++); i++)
         {
             *pCallBacks += (*pCallBacks >= fix_rva + new_nt_header->OptionalHeader.ImageBase ? new_rva_size : 0);
         }

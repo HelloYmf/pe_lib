@@ -2,10 +2,10 @@
 #define CATCH_CONFIG_MAIN
 #include "catch.hpp"
 #include <stdio.h>
-// #include <spdlog/spdlog.h>
+#include <spdlog/spdlog.h>
 
-// #include <pe_parser.h>
-// #include <utils.h>
+#include <pe_parser.h>
+#include <utils.h>
 
 
 // TEST_CASE("test_pe_header") {
@@ -61,24 +61,25 @@
 //     REQUIRE(fun3 == 0);
 // }
 
-// TEST_CASE("test_sections") {
-//     spdlog::info("Ready to test sections.");
+TEST_CASE("test_sections") {
+    spdlog::info("Ready to test sections.");
 
-//     FILE* fpe32 = pe_open("../../tests/pe_header_32.exe");
-//     REQUIRE(fpe32 != NULL);
-//     pe32_t* ppe32 = (pe32_t*)pe_parse_headers(fpe32);
-//     size_t null_size = pe_get_section_null_size((pe_t*)ppe32, ".text");
-//     spdlog::info(null_size);
-// }
+    FILE* fpe32 = pe_open("../../tests/examples/pe_header_32.exe");
+    REQUIRE(fpe32 != NULL);
+    pe32_t* ppe32 = (pe32_t*)pe_parse_headers(fpe32);
+    size_t null_size = pe_get_section_null_size((pe_t*)ppe32, ".text");
+    REQUIRE(null_size == 3024);
+}
 
 TEST_CASE("test_expand_text") {
-    printf("hwllo world");
-    //spdlog::info("Ready to test expand text.");
-    //FILE* fpe32 = pe_open("../../tests/expand_text_tls32.exe");
-    // REQUIRE(fpe32 != NULL);
-    // pe32_t* ppe32 = (pe32_t*)pe_parse_headers(fpe32);
-    // char* image_buffer = pe_extend_section32(ppe32, 0, 0x1000);
-    // size_t filesize = 0;
-    // char* file_buffer = pe_image_buffer_to_file_buffer32(image_buffer, &filesize);
-    // REQUIRE(pe_write("expanded_text.exe", file_buffer, filesize) == true);
+    spdlog::info("Ready to test expand text.");
+    FILE* fpe32 = pe_open("../../tests/examples/expand_text_tls32.exe");
+    REQUIRE(fpe32 != NULL);
+    pe32_t* ppe32 = (pe32_t*)pe_parse_headers(fpe32);
+    char* image_buffer = pe_extend_section32(ppe32, 1, 0x1000);
+    spdlog::info("expand success.");
+    size_t filesize = 0;
+    char* file_buffer = pe_image_buffer_to_file_buffer32(image_buffer, &filesize);
+    REQUIRE(pe_write("expanded_text.exe", file_buffer, filesize) == true);
+    REQUIRE(remove("expanded_text.exe") == 0);
 }

@@ -39,10 +39,10 @@ bool pe_check(FILE *executable)
 
 bool pe_write(const char* filename, char* buffer, size_t size)
 {
-  FILE* file = fopen(filename, "w+");
+  FILE* file = fopen(filename, "wb+");
 
   if (file != NULL) {
-      size_t real_written = fwrite(buffer, sizeof(char), size, file);
+      size_t real_written = fwrite(buffer, 1, size, file);
       if (real_written != size)
           return false;
       fclose(file);

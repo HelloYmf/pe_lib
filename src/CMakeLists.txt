@@ -25,3 +25,8 @@ message("   + Include path: ${PROJECT_INCLUDE_DIR}")
 
 target_sources("${OUT_NAME}" PRIVATE "${all_sources}")
 target_include_directories("${OUT_NAME}" PUBLIC "${PROJECT_INCLUDE_DIR}")
+
+# 临时方便调试
+add_executable("main" main.cpp)
+target_link_libraries("main" PRIVATE pe_lib)
+target_include_directories("main" PUBLIC "${PROJECT_INCLUDE_DIR}")

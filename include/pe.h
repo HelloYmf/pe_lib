@@ -7,6 +7,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <limits.h>
+#include <Windows.h>
 
 #define PE_SIGNATURE_ADDRESS_OFFSET 0x3c
 #define PE_SIGNATURE "PE\0" // {'P', 'E', '\0', '\0'}

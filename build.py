@@ -62,6 +62,10 @@ def run_cmake():
     if cmake_generator.find("Makefiles") != -1:
         os.system("mingw32-make.exe")
 
+    if build_architecture.find("x86") != -1:
+        # 生成pdb符号
+        os.system("cv2pdb.exe src./main.exe")
+
     os.chdir("..")
 
 def run_test():
