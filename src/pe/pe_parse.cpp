@@ -175,7 +175,7 @@ char* pe_get_image_buffer(pe_t* pe)
         memcpy(
             base + pe->section_header[i]->virtual_address, 
             pe->pe_file_buffer + pe->section_header[i]->pointer_to_raw_data,
-            pe->section_header[i]->virtual_size
+            pe->section_header[i]->size_of_raw_data         // fix go pe
         );
     }
     return base;

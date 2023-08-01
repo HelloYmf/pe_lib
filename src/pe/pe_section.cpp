@@ -113,8 +113,6 @@ char* pe_extend_section32(pe32_t* pe, uint32_t idx, uint32_t size)
          memcpy( dst_section_header->VirtualAddress + new_image_buffer, src_section_header->VirtualAddress + old_image_buffer, src_section_header->SizeOfRawData);
      }
 
-    
-
     // export table
     if ( new_nt_header->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT].VirtualAddress )
     {
@@ -194,13 +192,8 @@ char* pe_extend_section32(pe32_t* pe, uint32_t idx, uint32_t size)
                 pBaseRelocal->VirtualAddress += new_rva_size;
             }
             PWORD_RELOCAL pRelocalWord = (PWORD_RELOCAL)((char*)pBaseRelocal + sizeof(IMAGE_BASE_RELOCATION));
-            for ( int i = 0; i < pBaseRelocal->SizeOfBlock / sizeof(WORD_RELOCAL); i++)
+            for ( int i = 0; i < pBaseRelocal->SizeOfBlock / sizeof(WORD_RELOCAL) && pRelocalWord->Offset != 0; i++)
             {
-                if(pBaseRelocal->VirtualAddress + pRelocalWord->Offset >= fix_rva)
-                {
-                    pRelocalWord->Offset += new_rva_size;
-                }
-
                 char* reloc_addr = new_image_buffer + pBaseRelocal->VirtualAddress + pRelocalWord->Offset;
                 uint32_t dst_addr_rva = *(uint32_t*)(reloc_addr) - old_nt_header->OptionalHeader.ImageBase;
 
