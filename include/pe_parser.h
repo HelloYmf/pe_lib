@@ -22,7 +22,7 @@ size_t pe_get_section_null_size(pe_t* pe, const char* sec_name);
 char* pe_extend_section32(pe32_t* pe, uint32_t idx, uint32_t size);
 
 // pe table op
-intptr_t pe_get_export_func(pe_t* pe, intptr_t base, int hash);
+PVOID pe_get_export_func(char* pBase, DWORD dwHash);
 void pe_get_tls_callback();
 
 #endif

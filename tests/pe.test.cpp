@@ -38,48 +38,48 @@
 //     ppe64= NULL;
 // }
 
-// TEST_CASE("test_export_table") {
-//     spdlog::info("Ready to test export table.");
+TEST_CASE("test_export_table") {
+    spdlog::info("Ready to test export table.");
 
-//     FILE* fpe64 = pe_open("../../tests/examples/kernel32_64.dll");
-//     REQUIRE(fpe64 != NULL);
-//     pe64_t* ppe64 = (pe64_t*)pe_parse_headers(fpe64);
-//     char* pimage_buffer = pe_get_image_buffer((pe_t*)ppe64);
+    FILE* fpe64 = pe_open("D:/code/my_github/pe_lib/tests/examples/kernel32_86.dll");
+    REQUIRE(fpe64 != NULL);
+    pe64_t* ppe64 = (pe64_t*)pe_parse_headers(fpe64);
+    char* pimage_buffer = pe_get_image_buffer((pe_t*)ppe64);
 
-//     // 普通名字导出表
-//     intptr_t fun1 = pe_get_export_func((pe_t *)ppe64, (intptr_t)pimage_buffer, str_hash((char*)"BackupRead"));
-//     REQUIRE(*(char*)fun1 == *(char*)BackupRead);
-//     REQUIRE(*((char*)fun1+1) == *((char*)BackupRead+1));
+    // 普通名字导出表
+    char* fun1 = (char*)(pe_get_export_func(pimage_buffer, str_hash((char*)"BackupRead")));
+    REQUIRE(*(char*)fun1 == *(char*)BackupRead);
+    REQUIRE(*((char*)fun1+1) == *((char*)BackupRead+1));
 
-//     // 转发导出表
-//     intptr_t fun2 = pe_get_export_func((pe_t *)ppe64, (intptr_t)pimage_buffer, str_hash((char*)"AddVectoredExceptionHandler"));
-//     REQUIRE(*(char*)fun2 == *(char*)AddVectoredExceptionHandler);
-//     REQUIRE(*((char*)fun2+1) == *((char*)AddVectoredExceptionHandler+1));
+    // 转发导出表
+    char* fun2 = (char*)(pe_get_export_func(pimage_buffer, str_hash((char*)"AddVectoredExceptionHandler")));
+    REQUIRE(*(char*)fun2 == *(char*)AddVectoredExceptionHandler);
+    REQUIRE(*((char*)fun2+1) == *((char*)AddVectoredExceptionHandler+1));
 
-//     // 找不到目标函数
-//     intptr_t fun3 = pe_get_export_func((pe_t *)ppe64, (intptr_t)pimage_buffer, str_hash((char*)"test"));
-//     REQUIRE(fun3 == 0);
+    // 找不到目标函数
+    char* fun3 = (char*)(pe_get_export_func(pimage_buffer, str_hash((char*)"test")));
+    REQUIRE(fun3 == 0);
+}
+
+// TEST_CASE("test_sections") {
+//     spdlog::info("Ready to test sections.");
+
+//     FILE* fpe32 = pe_open("../../tests/examples/pe_header_32.exe");
+//     REQUIRE(fpe32 != NULL);
+//     pe32_t* ppe32 = (pe32_t*)pe_parse_headers(fpe32);
+//     size_t null_size = pe_get_section_null_size((pe_t*)ppe32, ".text");
+//     REQUIRE(null_size == 3024);
 // }
 
-TEST_CASE("test_sections") {
-    spdlog::info("Ready to test sections.");
-
-    FILE* fpe32 = pe_open("../../tests/examples/pe_header_32.exe");
-    REQUIRE(fpe32 != NULL);
-    pe32_t* ppe32 = (pe32_t*)pe_parse_headers(fpe32);
-    size_t null_size = pe_get_section_null_size((pe_t*)ppe32, ".text");
-    REQUIRE(null_size == 3024);
-}
-
-TEST_CASE("test_expand_text") {
-    spdlog::info("Ready to test expand text.");
-    FILE* fpe32 = pe_open("../../tests/examples/expand_text_tls32.exe");
-    REQUIRE(fpe32 != NULL);
-    pe32_t* ppe32 = (pe32_t*)pe_parse_headers(fpe32);
-    char* image_buffer = pe_extend_section32(ppe32, 1, 0x1000);
-    spdlog::info("expand success.");
-    size_t filesize = 0;
-    char* file_buffer = pe_image_buffer_to_file_buffer32(image_buffer, &filesize);
-    REQUIRE(pe_write("expanded_text.exe", file_buffer, filesize) == true);
-    REQUIRE(remove("expanded_text.exe") == 0);
-}
+// TEST_CASE("test_expand_text") {
+//     spdlog::info("Ready to test expand text.");
+//     FILE* fpe32 = pe_open("../../tests/examples/expand_text_tls32.exe");
+//     REQUIRE(fpe32 != NULL);
+//     pe32_t* ppe32 = (pe32_t*)pe_parse_headers(fpe32);
+//     char* image_buffer = pe_extend_section32(ppe32, 1, 0x1000);
+//     spdlog::info("expand success.");
+//     size_t filesize = 0;
+//     char* file_buffer = pe_image_buffer_to_file_buffer32(image_buffer, &filesize);
+//     REQUIRE(pe_write("expanded_text.exe", file_buffer, filesize) == true);
+//     REQUIRE(remove("expanded_text.exe") == 0);
+// }

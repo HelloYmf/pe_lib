@@ -307,4 +307,55 @@ typedef struct _IMAGE_DELAY_IMPORT_DESCRIPTOR
     uint32_t TimeDateStamp;
 }IMAGE_DELAY_IMPORT_DESCRIPTOR, *PIMAGE_DELAY_IMPORT_DESCRIPTOR;
 
+typedef struct _UNICODE_STR
+{
+    USHORT Length;
+    USHORT MaximumLength;
+    PWSTR pBuffer;
+} UNICODE_STR, * PUNICODE_STR;
+
+typedef struct _LDR_DATA_TABLE_ENTRY
+{
+    LIST_ENTRY InLoadOrderLinks;
+    LIST_ENTRY InMemoryOrderLinks;
+    LIST_ENTRY InInitializationOrderLinks;
+    PVOID DllBase;
+    PVOID EntryPoint;
+    ULONG SizeOfImage;
+    UNICODE_STR FullDllName;
+    UNICODE_STR BaseDllName;
+    ULONG Flags;
+    SHORT LoadCount;
+    SHORT TlsIndex;
+    LIST_ENTRY HashTableEntry;
+    ULONG TimeDateStamp;
+} LDR_DATA_TABLE_ENTRY, * PLDR_DATA_TABLE_ENTRY;
+typedef struct _PEB_LDR_DATA //, 7 elements, 0x28 bytes
+{
+    DWORD dwLength;
+    DWORD dwInitialized;
+    LPVOID lpSsHandle;
+    LIST_ENTRY InLoadOrderModuleList;
+    LIST_ENTRY InMemoryOrderModuleList;
+    LIST_ENTRY InInitializationOrderModuleList;
+    LPVOID lpEntryInProgress;
+} PEB_LDR_DATA, * PPEB_LDR_DATA;
+
+typedef struct _PEB_FREE_BLOCK // 2 elements, 0x8 bytes
+{
+    struct _PEB_FREE_BLOCK* pNext;
+    DWORD dwSize;
+} PEB_FREE_BLOCK, * PPEB_FREE_BLOCK;
+
+typedef struct __MYPEB // 65 elements, 0x210 bytes
+{
+    BYTE bInheritedAddressSpace;
+    BYTE bReadImageFileExecOptions;
+    BYTE bBeingDebugged;
+    BYTE bSpareBool;
+    LPVOID lpMutant;
+    LPVOID lpImageBaseAddress;
+    PPEB_LDR_DATA pLdr;
+} _MYPEB, * _PMYPEB;
+
 #endif
