@@ -57,7 +57,7 @@ PVOID get_loaded_module_base(DWORD dwHash)
 	return NULL;
 }
 
-PVOID pe_get_export_func(char* pBase, DWORD dwHash)
+PVOID pe_get_export_func(PCHAR pBase, DWORD dwHash)
 {
     PIMAGE_DOS_HEADER pTebDllBase = (PIMAGE_DOS_HEADER)(pBase);
 	PIMAGE_NT_HEADERS pTebNts = (PIMAGE_NT_HEADERS)((ULONG_PTR)pTebDllBase + pTebDllBase->e_lfanew);

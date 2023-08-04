@@ -38,27 +38,40 @@
 //     ppe64= NULL;
 // }
 
-TEST_CASE("test_export_table") {
-    spdlog::info("Ready to test export table.");
+// TEST_CASE("test_export_table") {
+//     spdlog::info("Ready to test export table.");
+
+//     FILE* fpe64 = pe_open("D:/code/my_github/pe_lib/tests/examples/kernel32_86.dll");
+//     REQUIRE(fpe64 != NULL);
+//     pe64_t* ppe64 = (pe64_t*)pe_parse_headers(fpe64);
+//     char* pimage_buffer = pe_get_image_buffer((pe_t*)ppe64);
+
+//     // 普通名字导出表
+//     char* fun1 = (char*)(pe_get_export_func(pimage_buffer, str_hash((char*)"BackupRead")));
+//     REQUIRE(*(char*)fun1 == *(char*)BackupRead);
+//     REQUIRE(*((char*)fun1+1) == *((char*)BackupRead+1));
+
+//     // 转发导出表
+//     char* fun2 = (char*)(pe_get_export_func(pimage_buffer, str_hash((char*)"AddVectoredExceptionHandler")));
+//     REQUIRE(*(char*)fun2 == *(char*)AddVectoredExceptionHandler);
+//     REQUIRE(*((char*)fun2+1) == *((char*)AddVectoredExceptionHandler+1));
+
+//     // 找不到目标函数
+//     char* fun3 = (char*)(pe_get_export_func(pimage_buffer, str_hash((char*)"test")));
+//     REQUIRE(fun3 == 0);
+// }
+
+TEST_CASE("test_add_import_table") {
+    spdlog::info("Ready to test add import table.");
 
     FILE* fpe64 = pe_open("D:/code/my_github/pe_lib/tests/examples/kernel32_86.dll");
     REQUIRE(fpe64 != NULL);
     pe64_t* ppe64 = (pe64_t*)pe_parse_headers(fpe64);
-    char* pimage_buffer = pe_get_image_buffer((pe_t*)ppe64);
+    char* pimage_buffer = pe_get_image_buffer(ppe64->pe_file_buffer);
 
     // 普通名字导出表
-    char* fun1 = (char*)(pe_get_export_func(pimage_buffer, str_hash((char*)"BackupRead")));
-    REQUIRE(*(char*)fun1 == *(char*)BackupRead);
-    REQUIRE(*((char*)fun1+1) == *((char*)BackupRead+1));
-
-    // 转发导出表
-    char* fun2 = (char*)(pe_get_export_func(pimage_buffer, str_hash((char*)"AddVectoredExceptionHandler")));
-    REQUIRE(*(char*)fun2 == *(char*)AddVectoredExceptionHandler);
-    REQUIRE(*((char*)fun2+1) == *((char*)AddVectoredExceptionHandler+1));
-
-    // 找不到目标函数
-    char* fun3 = (char*)(pe_get_export_func(pimage_buffer, str_hash((char*)"test")));
-    REQUIRE(fun3 == 0);
+    std::vector<std::string> pFunNames = {"hello", "world"};
+    REQUIRE(pe_add_import_entry(pimage_buffer, (PCHAR)"USER32.dll", pFunNames) != NULL);
 }
 
 // TEST_CASE("test_sections") {

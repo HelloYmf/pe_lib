@@ -139,26 +139,12 @@ void pe_free_headers(pe_t *pe)
     free(pe);
 }
 
-char* pe_get_image_buffer(pe_t* pe)
+char* pe_get_image_buffer(char* pBase)
 {
-    size_t size_of_image = 0;
-    switch (pe->type) 
-    {
-        case MAGIC_32BIT:
-        {
-            size_of_image = ((pe32_t*)pe)->optional_header->size_of_image;
-            break;
-        }
-        case MAGIC_64BIT:
-        {
-            size_of_image = ((pe64_t*)pe)->optional_header->size_of_image;
-            break;
-        }
-        default:
-        {
-            return NULL;
-        }
-    }
+    PIMAGE_DOS_HEADER pDos = (PIMAGE_DOS_HEADER)(pBase);
+	PIMAGE_NT_HEADERS pNts = (PIMAGE_NT_HEADERS)((ULONG_PTR)pBase + pDos->e_lfanew);
+	PIMAGE_SECTION_HEADER pSecs = (PIMAGE_SECTION_HEADER)((ULONG_PTR)&(pNts->OptionalHeader) + pNts->FileHeader.SizeOfOptionalHeader);
+    size_t size_of_image = pNts->OptionalHeader.SizeOfImage;
 
     char* base = (char*)malloc(size_of_image);
     if(!base) 
@@ -167,15 +153,15 @@ char* pe_get_image_buffer(pe_t* pe)
     }
 
     // copy of headers
-    memcpy(base, pe->pe_file_buffer, ((pe32_t*)pe)->optional_header->size_of_headers);
+    memcpy(base, pBase, pNts->OptionalHeader.SizeOfHeaders);
 
     // copy of sections
-    for(int i = 0; i < pe->number_of_sections; i++) 
+    for(int i = 0; i < pNts->FileHeader.NumberOfSections; i++) 
     {
         memcpy(
-            base + pe->section_header[i]->virtual_address, 
-            pe->pe_file_buffer + pe->section_header[i]->pointer_to_raw_data,
-            pe->section_header[i]->size_of_raw_data         // fix go pe
+            base + pSecs[i].VirtualAddress, 
+            pBase + pSecs[i].PointerToRawData,
+            pSecs[i].SizeOfRawData         // fix go pe
         );
     }
     return base;
@@ -190,15 +176,15 @@ void pe_free_buffer(char* buffer)
     }
 }
 
-char* pe_image_buffer_to_file_buffer32(char* image_buffer, size_t* out_file_size)
+char* pe_image_buffer_to_file_buffer32(char* pBuffer, size_t* pSize)
 {
-    PIMAGE_DOS_HEADER image_dos_header = (PIMAGE_DOS_HEADER)image_buffer;
-    PIMAGE_NT_HEADERS32 image_nt_headers = (PIMAGE_NT_HEADERS32)(image_buffer + image_dos_header->e_lfanew);
+    PIMAGE_DOS_HEADER image_dos_header = (PIMAGE_DOS_HEADER)pBuffer;
+    PIMAGE_NT_HEADERS32 image_nt_headers = (PIMAGE_NT_HEADERS32)(pBuffer + image_dos_header->e_lfanew);
     PIMAGE_SECTION_HEADER image_section_header = (PIMAGE_SECTION_HEADER)((char*)image_nt_headers + sizeof(IMAGE_NT_HEADERS32));
     
     size_t file_size = image_section_header[image_nt_headers->FileHeader.NumberOfSections - 1].PointerToRawData + 
                         image_section_header[image_nt_headers->FileHeader.NumberOfSections - 1].SizeOfRawData;
-    *out_file_size = file_size;
+    *pSize = file_size;
 
     char* file_buffer = (char*)malloc(file_size);
     if(!file_buffer) 
@@ -208,14 +194,14 @@ char* pe_image_buffer_to_file_buffer32(char* image_buffer, size_t* out_file_size
     memset(file_buffer, 0, file_size);
 
     // copy file headers
-    memcpy(file_buffer, image_buffer, image_nt_headers->OptionalHeader.SizeOfHeaders);
+    memcpy(file_buffer, pBuffer, image_nt_headers->OptionalHeader.SizeOfHeaders);
 
     // copy section datas
     for(int i = 0; i < image_nt_headers->FileHeader.NumberOfSections; i++) 
     {
         memcpy(
             file_buffer + image_section_header[i].PointerToRawData, 
-            image_buffer + image_section_header[i].VirtualAddress,
+            pBuffer + image_section_header[i].VirtualAddress,
             image_section_header[i].SizeOfRawData
         );
     }
