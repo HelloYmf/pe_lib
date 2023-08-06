@@ -8,6 +8,16 @@
 #include <iostream>
 #include <winnt.h>
 
+DWORD pe_get_section_rva32(PCHAR pBuffer, PCHAR pSecName, DWORD dwIdx)
+{
+    PIMAGE_DOS_HEADER pDos = (PIMAGE_DOS_HEADER)pBuffer;
+    PIMAGE_NT_HEADERS32 pNts = (PIMAGE_NT_HEADERS32)(pBuffer + pDos->e_lfanew);
+    PIMAGE_SECTION_HEADER pSecs = (PIMAGE_SECTION_HEADER)((char*)pNts + sizeof(IMAGE_NT_HEADERS32));
+
+    if(dwIdx >= 0 && dwIdx < pNts->FileHeader.NumberOfSections)
+        return pSecs[dwIdx].VirtualAddress;
+}
+
 DWORD pe_get_section_idx32(PCHAR pBuffer, PCHAR pSecName)
 {
     DWORD dwCmp = strlen(pSecName) > 8 ? 8 : strlen(pSecName);
