@@ -106,7 +106,8 @@ PCHAR pe_extend_section32(PCHAR pOldImageBuffer, DWORD dwIdx, DWORD dwSize, DWOR
     new_add_section_header->Misc.VirtualSize += new_rva_size;
     new_add_section_header->SizeOfRawData += new_foa_size;
 
-    *pExtendStartRva = new_add_section_header->VirtualAddress + new_add_section_header->Misc.VirtualSize;
+    if(pExtendStartRva != NULL)
+        *pExtendStartRva = new_add_section_header->VirtualAddress + new_add_section_header->Misc.VirtualSize;
 
     // fix other section headers
     for(int i = dwIdx + 1; i < new_nt_header->FileHeader.NumberOfSections; i++)
@@ -137,7 +138,8 @@ PCHAR pe_extend_section32(PCHAR pOldImageBuffer, DWORD dwIdx, DWORD dwSize, DWOR
      {
          PIMAGE_SECTION_HEADER dst_section_header = new_section_header + i;
          PIMAGE_SECTION_HEADER src_section_header = old_section_header + i;
-         memcpy( dst_section_header->VirtualAddress + new_image_buffer, src_section_header->VirtualAddress + pOldImageBuffer, src_section_header->SizeOfRawData);
+         SIZE_T sCopySize = src_section_header->SizeOfRawData < src_section_header->Misc.VirtualSize ? src_section_header->SizeOfRawData : src_section_header->Misc.VirtualSize;
+         memcpy( dst_section_header->VirtualAddress + new_image_buffer, src_section_header->VirtualAddress + pOldImageBuffer, sCopySize);
      }
 
     // export table
