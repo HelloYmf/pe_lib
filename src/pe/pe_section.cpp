@@ -224,7 +224,7 @@ PCHAR pe_extend_section32(PCHAR pOldImageBuffer, DWORD dwIdx, DWORD dwSize, DWOR
             }
 
             PWORD_RELOCAL pRelocalWord = (PWORD_RELOCAL)((char*)pBaseRelocal + sizeof(IMAGE_BASE_RELOCATION));
-            DWORD dwBlockSize = pBaseRelocal->SizeOfBlock / sizeof(WORD_RELOCAL);
+            DWORD dwBlockSize = (pBaseRelocal->SizeOfBlock - sizeof(IMAGE_BASE_RELOCATION)) / sizeof(WORD_RELOCAL);
 
             for ( int i = 0; i < dwBlockSize && pRelocalWord->Type == 0x3; i++)
             {
