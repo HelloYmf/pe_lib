@@ -88,3 +88,12 @@ TEST_CASE("test_add_import_table") {
 //     REQUIRE(pe_write("expanded_text.exe", file_buffer, filesize) == true);
 //     REQUIRE(remove("expanded_text.exe") == 0);
 // }
+
+TEST_CASE("test_get_section_idx_by_name")
+{
+    FILE* fpe32 = pe_open("../../tests/examples/expand_text_tls32.exe");
+    REQUIRE(fpe32 != NULL);
+    pe32_t* ppe32 = (pe32_t*)pe_parse_headers(fpe32);
+    DWORD idx = pe_get_section_idx32(ppe32->pe_file_buffer, (PCHAR)".text");
+    REQUIRE(idx == 1);
+}

@@ -1,11 +1,42 @@
 #include <pe.h>
 #include <cstdint>
 #include <pe_parser.h>
+#include <string.h>
 #include <stdlib.h>
 #include <Windows.h>
 
 #include <iostream>
 #include <winnt.h>
+
+DWORD pe_get_section_idx32(PCHAR pBuffer, PCHAR pSecName)
+{
+    DWORD dwCmp = strlen(pSecName) > 8 ? 8 : strlen(pSecName);
+    PIMAGE_DOS_HEADER pDos = (PIMAGE_DOS_HEADER)pBuffer;
+    PIMAGE_NT_HEADERS32 pNts = (PIMAGE_NT_HEADERS32)(pBuffer + pDos->e_lfanew);
+    PIMAGE_SECTION_HEADER pSecs = (PIMAGE_SECTION_HEADER)((char*)pNts + sizeof(IMAGE_NT_HEADERS32));
+    for(int i = 0; i < pNts->FileHeader.NumberOfSections; i++)
+    {
+        bool flag = true;
+        int dwCurNameSize = 0;
+        for(int j = 0; j < 8; j++)
+        {
+            if(pSecs[i].Name[j])
+                dwCurNameSize++;      
+        }
+        int dwCmpNameSize = 0;
+        for(int j = 0; j < dwCmp; j++)
+        {
+            if(pSecs[i].Name[j] != pSecName[j])
+            {
+                flag = false;
+            }
+            dwCmpNameSize++;
+        }
+        if(flag && dwCmpNameSize == dwCurNameSize)
+            return i;
+    }
+    return -1;
+}
 
 size_t pe_get_section_null_size(pe_t* pe, const char* sec_name)
 {
