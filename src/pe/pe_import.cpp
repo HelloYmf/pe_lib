@@ -168,8 +168,9 @@ PCHAR pe_add_import_entry(PCHAR pOldImageBuffer, PCHAR pDLLName, std::vector<std
     // 扩展大小 = 原始导入表大小 + 新增导入项(0x14) + 新增导入DLL名字(strlen(pDLLName) + 新增导入函数名字 + IAT项(0x4))
     size_t sExpSize = sOrdImportSize + sizeof(IMAGE_IMPORT_DESCRIPTOR) + (strlen(pDLLName) + 1) + sAddFunNameTotalSize + pFunNames.size() * 4;
     sExpSize += pSecs[dwCurSecIdx].Misc.VirtualSize > pSecs[dwCurSecIdx].SizeOfRawData ? pSecs[dwCurSecIdx].Misc.VirtualSize - pSecs[dwCurSecIdx].SizeOfRawData : 0;
-    // 扩展节区 
-    char* pNewImageBuffer = pe_extend_section32(pOldImageBuffer, dwCurSecIdx, sExpSize);
+    // 扩展节区
+    DWORD pExtendStartRva = NULL;
+    char* pNewImageBuffer = pe_extend_section32(pOldImageBuffer, dwCurSecIdx, sExpSize, &pExtendStartRva);
     if(!pNewImageBuffer)
         return NULL;
     printf("[+]import: expand %d sectin %x bytes success\r\n", (int)dwCurSecIdx, sExpSize);

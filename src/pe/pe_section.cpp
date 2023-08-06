@@ -59,7 +59,7 @@ size_t pe_get_section_null_size(pe_t* pe, const char* sec_name)
 }
 
 // 因为32位和64位对异常表支持的不一样，所以需要分别处理
-PCHAR pe_extend_section32(PCHAR pOldImageBuffer, DWORD dwIdx, DWORD dwSize)
+PCHAR pe_extend_section32(PCHAR pOldImageBuffer, DWORD dwIdx, DWORD dwSize, DWORD* pExtendStartRva)
 {
     PIMAGE_DOS_HEADER old_dos_header = (PIMAGE_DOS_HEADER)pOldImageBuffer;
     PIMAGE_NT_HEADERS32 old_nt_header = (PIMAGE_NT_HEADERS32)(pOldImageBuffer + old_dos_header->e_lfanew);
@@ -105,6 +105,9 @@ PCHAR pe_extend_section32(PCHAR pOldImageBuffer, DWORD dwIdx, DWORD dwSize)
     new_nt_header->OptionalHeader.SizeOfImage += (new_nt_header->OptionalHeader.SizeOfImage >= fix_rva ? new_rva_size : 0);
     new_add_section_header->Misc.VirtualSize += new_rva_size;
     new_add_section_header->SizeOfRawData += new_foa_size;
+
+    *pExtendStartRva = new_add_section_header->VirtualAddress + new_add_section_header->Misc.VirtualSize;
+
     // fix other section headers
     for(int i = dwIdx + 1; i < new_nt_header->FileHeader.NumberOfSections; i++)
     {
