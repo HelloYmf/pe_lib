@@ -22,7 +22,7 @@ endforeach()
 # 输出所有编译的头文件
 message("   + Include path: ${PROJECT_INCLUDE_DIR}")
 
-add_library("${OUT_NAME}" OBJECT "${all_sources}")
+add_library("${OUT_NAME}" STATIC "${all_sources}")
 target_include_directories("${OUT_NAME}" PUBLIC "${PROJECT_INCLUDE_DIR}")
 
 # 临时方便调试
