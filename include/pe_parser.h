@@ -21,7 +21,7 @@ void pe_free_buffer(char* buffer);
 char* pe_image_buffer_to_file_buffer32(char* image_buffer, size_t* out_file_size);
 
 // pe节表
-DWORD pe_get_section_rva32(PCHAR pBuffer, PCHAR pSecName, DWORD dwIdx);
+DWORD pe_get_section_rva32(PCHAR pBuffer, DWORD dwIdx);
 DWORD pe_get_section_idx32(PCHAR pBuffer, PCHAR pSecName);
 size_t pe_get_section_null_size(pe_t* pe, const char* sec_name);
 PCHAR pe_extend_section32(PCHAR pOldImageBuffer, DWORD dwIdx, DWORD dwSize, DWORD* pExtendStartRva);

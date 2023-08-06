@@ -8,7 +8,7 @@
 #include <iostream>
 #include <winnt.h>
 
-DWORD pe_get_section_rva32(PCHAR pBuffer, PCHAR pSecName, DWORD dwIdx)
+DWORD pe_get_section_rva32(PCHAR pBuffer, DWORD dwIdx)
 {
     PIMAGE_DOS_HEADER pDos = (PIMAGE_DOS_HEADER)pBuffer;
     PIMAGE_NT_HEADERS32 pNts = (PIMAGE_NT_HEADERS32)(pBuffer + pDos->e_lfanew);
