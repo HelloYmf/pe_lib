@@ -93,7 +93,7 @@ PCHAR pe_extend_section32(PCHAR pOldImageBuffer, DWORD dwIdx, DWORD dwSize, DWOR
     PIMAGE_SECTION_HEADER new_section_header = (PIMAGE_SECTION_HEADER)((char*)new_nt_header + sizeof(IMAGE_NT_HEADERS32));
 
     // dst expand section header
-    PIMAGE_SECTION_HEADER new_add_section_header = new_section_header + dwIdx;
+    PIMAGE_SECTION_HEADER new_add_section_header = &new_section_header[dwIdx];
 
     uint32_t fix_rva = new_add_section_header->VirtualAddress + new_add_section_header->Misc.VirtualSize;
     uint32_t fix_foa = new_add_section_header->PointerToRawData + new_add_section_header->SizeOfRawData;
@@ -107,7 +107,7 @@ PCHAR pe_extend_section32(PCHAR pOldImageBuffer, DWORD dwIdx, DWORD dwSize, DWOR
     new_add_section_header->SizeOfRawData += new_foa_size;
 
     if(pExtendStartRva != NULL)
-        *pExtendStartRva = new_add_section_header->VirtualAddress + new_add_section_header->Misc.VirtualSize;
+        *pExtendStartRva = new_add_section_header->VirtualAddress + old_section_header[dwIdx].Misc.VirtualSize;
 
     // fix other section headers
     for(int i = dwIdx + 1; i < new_nt_header->FileHeader.NumberOfSections; i++)
