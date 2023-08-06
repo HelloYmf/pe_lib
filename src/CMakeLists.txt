@@ -9,7 +9,6 @@ set(SRC_DIRS
 )
 
 # pe_lib是obj库
-add_library("${OUT_NAME}" OBJECT "")
 set(all_sources "")
 foreach(dir IN LISTS SRC_DIRS)
     file(GLOB_RECURSE dir_sources CONFIGURE_DEPENDS "${PROJECT_SRC_DIR}/${dir}/*.cpp")
@@ -23,7 +22,7 @@ endforeach()
 # 输出所有编译的头文件
 message("   + Include path: ${PROJECT_INCLUDE_DIR}")
 
-target_sources("${OUT_NAME}" PRIVATE "${all_sources}")
+add_library("${OUT_NAME}" OBJECT "${all_sources}")
 target_include_directories("${OUT_NAME}" PUBLIC "${PROJECT_INCLUDE_DIR}")
 
 # 临时方便调试

@@ -2,15 +2,12 @@
 #define CATCH_CONFIG_MAIN
 #include "catch.hpp"
 #include <stdio.h>
-#include <spdlog/spdlog.h>
 
 #include <pe_parser.h>
 #include <utils.h>
 
 
 // TEST_CASE("test_pe_header") {
-
-//     spdlog::info("Ready to test test_pe_headers.");
 
 //     FILE* fpe32 = pe_open("../../tests/examples/pe_header_32.exe");
 //     REQUIRE(fpe32 != NULL);
@@ -39,7 +36,6 @@
 // }
 
 // TEST_CASE("test_export_table") {
-//     spdlog::info("Ready to test export table.");
 
 //     FILE* fpe64 = pe_open("D:/code/my_github/pe_lib/tests/examples/kernel32_86.dll");
 //     REQUIRE(fpe64 != NULL);
@@ -62,8 +58,6 @@
 // }
 
 TEST_CASE("test_add_import_table") {
-    spdlog::info("Ready to test add import table.");
-
     FILE* fpe64 = pe_open("D:/code/my_github/pe_lib/tests/examples/kernel32_86.dll");
     REQUIRE(fpe64 != NULL);
     pe64_t* ppe64 = (pe64_t*)pe_parse_headers(fpe64);
@@ -75,7 +69,6 @@ TEST_CASE("test_add_import_table") {
 }
 
 // TEST_CASE("test_sections") {
-//     spdlog::info("Ready to test sections.");
 
 //     FILE* fpe32 = pe_open("../../tests/examples/pe_header_32.exe");
 //     REQUIRE(fpe32 != NULL);
@@ -85,7 +78,6 @@ TEST_CASE("test_add_import_table") {
 // }
 
 // TEST_CASE("test_expand_text") {
-//     spdlog::info("Ready to test expand text.");
 //     FILE* fpe32 = pe_open("../../tests/examples/expand_text_tls32.exe");
 //     REQUIRE(fpe32 != NULL);
 //     pe32_t* ppe32 = (pe32_t*)pe_parse_headers(fpe32);
