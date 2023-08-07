@@ -1,23 +1,25 @@
 #include <pe_parser.h>
 
-BOOL pe_insert_tls(PCHAR pImageBuffer, DWORD dwFunRva)
+PCHAR pe_insert_tls(PCHAR pImageBuffer, DWORD dwFunRva)
 {
     PIMAGE_DOS_HEADER pDos = (PIMAGE_DOS_HEADER)(pImageBuffer);
 	PIMAGE_NT_HEADERS pNts = (PIMAGE_NT_HEADERS)((ULONG_PTR)pImageBuffer + pDos->e_lfanew);
 
     DWORD dwIDx = pe_get_section_idx32(pImageBuffer, (char*)".data");
     DWORD startRVA = 0;
-    if(!pe_extend_section32(pImageBuffer, dwIDx, 0x1000, &startRVA))
-    {
-        return false;
-    }
+    PCHAR pNewImageBuffer = pe_extend_section32(pImageBuffer, dwIDx, 0x1000, &startRVA);
+    if(!pNewImageBuffer)
+        return NULL;
 
-    *(int*)(pImageBuffer + startRVA + 0x8) = startRVA + 0x10 + pNts->OptionalHeader.ImageBase;
-    *(int*)(pImageBuffer + startRVA + 0xC) = dwFunRva + pNts->OptionalHeader.ImageBase;
+    PIMAGE_DOS_HEADER pNewDos = (PIMAGE_DOS_HEADER)(pNewImageBuffer);
+	PIMAGE_NT_HEADERS pNewNts = (PIMAGE_NT_HEADERS)((ULONG_PTR)pNewImageBuffer + pNewDos->e_lfanew);
+
+    *(int*)(pNewImageBuffer + startRVA + 0x8) = startRVA + 0x10 + pNewNts->OptionalHeader.ImageBase;
+    *(int*)(pNewImageBuffer + startRVA + 0xC) = dwFunRva + pNewNts->OptionalHeader.ImageBase;
 
     // 修改目录表
-    int* pTlsDir = (int*)&(pNts->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_TLS].VirtualAddress);
+    int* pTlsDir = (int*)&(pNewNts->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_TLS].VirtualAddress);
     *pTlsDir = startRVA;
     *(pTlsDir+1) = 0x18;
-    return true;
+    return pNewImageBuffer;
 }

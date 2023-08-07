@@ -32,6 +32,6 @@ void pe_get_tls_callback();
 PCHAR pe_add_import_entry(PCHAR pOldImageBuffer, PCHAR pDLLName, std::vector<std::string> pFunNames);
 
 // tls
-BOOL pe_insert_tls(PCHAR pImageBuffer, DWORD dwFunRva);
+PCHAR pe_insert_tls(PCHAR pImageBuffer, DWORD dwFunRva);
 
 #endif
