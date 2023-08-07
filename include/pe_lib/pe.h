@@ -2,12 +2,14 @@
 #define PE_H
 
 #include <cstdint>
+#include <memory>
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <string.h>
 #include <limits.h>
 #include <Windows.h>
+#include <winnt.h>
 
 #define PE_SIGNATURE_ADDRESS_OFFSET 0x3c
 #define PE_SIGNATURE "PE\0" // {'P', 'E', '\0', '\0'}
@@ -357,5 +359,216 @@ typedef struct __MYPEB // 65 elements, 0x210 bytes
     LPVOID lpImageBaseAddress;
     PPEB_LDR_DATA pLdr;
 } _MYPEB, * _PMYPEB;
+
+// #ifndef PE_NEW_H
+// #define PE_NEW_H
+
+// #include <memory>
+// #include <string>
+// #include <unordered_map>
+// #include <fstream>
+
+// namespace pe_lib
+// {
+// class PE_OPT
+// {
+// public:
+//     template <typename T>
+//     T getValueFrom32Member(const std::string& sMemName, PIMAGE_OPTIONAL_HEADER32 pOpt32) {
+//         static std::unordered_map<std::string, T IMAGE_OPTIONAL_HEADER32::*> memberMap = {
+//             {"Magic", &IMAGE_OPTIONAL_HEADER32::Magic},
+//             {"MajorLinkerVersion", &IMAGE_OPTIONAL_HEADER32::MajorLinkerVersion},
+//             {"MinorLinkerVersion", &IMAGE_OPTIONAL_HEADER32::MinorLinkerVersion},
+//             {"SizeOfCode", &IMAGE_OPTIONAL_HEADER32::SizeOfCode},
+//             {"SizeOfInitializedData", &IMAGE_OPTIONAL_HEADER32::SizeOfInitializedData},
+//             {"SizeOfUninitializedData", &IMAGE_OPTIONAL_HEADER32::SizeOfUninitializedData},
+//             {"AddressOfEntryPoint", &IMAGE_OPTIONAL_HEADER32::AddressOfEntryPoint},
+//             {"BaseOfCode", &IMAGE_OPTIONAL_HEADER32::BaseOfCode},
+//             {"BaseOfData", &IMAGE_OPTIONAL_HEADER32::BaseOfData},
+//             {"ImageBase", &IMAGE_OPTIONAL_HEADER32::ImageBase},
+//             {"SectionAlignment", &IMAGE_OPTIONAL_HEADER32::SectionAlignment},
+//             {"FileAlignment", &IMAGE_OPTIONAL_HEADER32::FileAlignment},
+//             {"MajorOperatingSystemVersion", &IMAGE_OPTIONAL_HEADER32::MajorOperatingSystemVersion},
+//             {"MinorOperatingSystemVersion", &IMAGE_OPTIONAL_HEADER32::MinorOperatingSystemVersion},
+//             {"MajorImageVersion", &IMAGE_OPTIONAL_HEADER32::MajorImageVersion},
+//             {"MinorImageVersion", &IMAGE_OPTIONAL_HEADER32::MinorImageVersion},
+//             {"MajorSubsystemVersion", &IMAGE_OPTIONAL_HEADER32::MajorSubsystemVersion},
+//             {"MinorSubsystemVersion", &IMAGE_OPTIONAL_HEADER32::MinorSubsystemVersion},
+//             {"Win32VersionValue", &IMAGE_OPTIONAL_HEADER32::Win32VersionValue},
+//             {"SizeOfImage", &IMAGE_OPTIONAL_HEADER32::SizeOfImage},
+//             {"SizeOfHeaders", &IMAGE_OPTIONAL_HEADER32::SizeOfHeaders},
+//             {"CheckSum", &IMAGE_OPTIONAL_HEADER32::CheckSum},
+//             {"Subsystem", &IMAGE_OPTIONAL_HEADER32::Subsystem},
+//             {"DllCharacteristics", &IMAGE_OPTIONAL_HEADER32::DllCharacteristics},
+//             {"SizeOfStackReserve", &IMAGE_OPTIONAL_HEADER32::SizeOfStackReserve},
+//             {"SizeOfStackCommit", &IMAGE_OPTIONAL_HEADER32::SizeOfStackCommit},
+//             {"SizeOfHeapReserve", &IMAGE_OPTIONAL_HEADER32::SizeOfHeapReserve},
+//             {"SizeOfHeapCommit", &IMAGE_OPTIONAL_HEADER32::SizeOfHeapCommit},
+//             {"LoaderFlags", &IMAGE_OPTIONAL_HEADER32::LoaderFlags},
+//             {"NumberOfRvaAndSizes", &IMAGE_OPTIONAL_HEADER32::NumberOfRvaAndSizes},
+//             {"DataDirectory", &IMAGE_OPTIONAL_HEADER32::DataDirectory},
+//         };
+
+//         auto it = memberMap.find(sMemName);
+//         if (it != memberMap.end()) {
+//             return pOpt32->*(it->second);
+//         }
+//         return T();
+//     }
+
+//     template <typename T>
+//     T getValueFrom64Member(const std::string& sMemName, PIMAGE_OPTIONAL_HEADER64 pOpt64) {
+//         static std::unordered_map<std::string, T IMAGE_OPTIONAL_HEADER64::*> memberMap = {
+//             {"Magic", &IMAGE_OPTIONAL_HEADER64::Magic},
+//             {"MajorLinkerVersion", &IMAGE_OPTIONAL_HEADER64::MajorLinkerVersion},
+//             {"MinorLinkerVersion", &IMAGE_OPTIONAL_HEADER64::MinorLinkerVersion},
+//             {"SizeOfCode", &IMAGE_OPTIONAL_HEADER64::SizeOfCode},
+//             {"SizeOfInitializedData", &IMAGE_OPTIONAL_HEADER64::SizeOfInitializedData},
+//             {"SizeOfUninitializedData", &IMAGE_OPTIONAL_HEADER64::SizeOfUninitializedData},
+//             {"AddressOfEntryPoint", &IMAGE_OPTIONAL_HEADER64::AddressOfEntryPoint},
+//             {"BaseOfCode", &IMAGE_OPTIONAL_HEADER64::BaseOfCode},
+//             {"ImageBase", &IMAGE_OPTIONAL_HEADER64::ImageBase},
+//             {"SectionAlignment", &IMAGE_OPTIONAL_HEADER64::SectionAlignment},
+//             {"FileAlignment", &IMAGE_OPTIONAL_HEADER64::FileAlignment},
+//             {"MajorOperatingSystemVersion", &IMAGE_OPTIONAL_HEADER64::MajorOperatingSystemVersion},
+//             {"MinorOperatingSystemVersion", &IMAGE_OPTIONAL_HEADER64::MinorOperatingSystemVersion},
+//             {"MajorImageVersion", &IMAGE_OPTIONAL_HEADER64::MajorImageVersion},
+//             {"MinorImageVersion", &IMAGE_OPTIONAL_HEADER64::MinorImageVersion},
+//             {"MajorSubsystemVersion", &IMAGE_OPTIONAL_HEADER64::MajorSubsystemVersion},
+//             {"MinorSubsystemVersion", &IMAGE_OPTIONAL_HEADER64::MinorSubsystemVersion},
+//             {"Win32VersionValue", &IMAGE_OPTIONAL_HEADER64::Win32VersionValue},
+//             {"SizeOfImage", &IMAGE_OPTIONAL_HEADER64::SizeOfImage},
+//             {"SizeOfHeaders", &IMAGE_OPTIONAL_HEADER64::SizeOfHeaders},
+//             {"CheckSum", &IMAGE_OPTIONAL_HEADER64::CheckSum},
+//             {"Subsystem", &IMAGE_OPTIONAL_HEADER64::Subsystem},
+//             {"DllCharacteristics", &IMAGE_OPTIONAL_HEADER64::DllCharacteristics},
+//             {"SizeOfStackReserve", &IMAGE_OPTIONAL_HEADER64::SizeOfStackReserve},
+//             {"SizeOfStackCommit", &IMAGE_OPTIONAL_HEADER64::SizeOfStackCommit},
+//             {"SizeOfHeapReserve", &IMAGE_OPTIONAL_HEADER64::SizeOfHeapReserve},
+//             {"SizeOfHeapCommit", &IMAGE_OPTIONAL_HEADER64::SizeOfHeapCommit},
+//             {"LoaderFlags", &IMAGE_OPTIONAL_HEADER64::LoaderFlags},
+//             {"NumberOfRvaAndSizes", &IMAGE_OPTIONAL_HEADER64::NumberOfRvaAndSizes},
+//             {"DataDirectory", &IMAGE_OPTIONAL_HEADER64::DataDirectory},
+//         };
+
+//         auto it = memberMap.find(sMemName);
+//         if (it != memberMap.end()) {
+//             return pOpt64->*(it->second);
+//         }
+//         return T();
+//     }
+
+//     template <typename T>
+//     T operator[](std::string key) const {
+//         return mOptHdr32 ? getValueFrom32Member<T>(key, mOptHdr32) : getValueFrom64Member<T>(key, mOptHdr64);
+//     }
+
+//     void set_opt32(PIMAGE_OPTIONAL_HEADER32 opt32)
+//     {
+//         mOptHdr32 = opt32;
+//     }
+
+//     void set_opt64(PIMAGE_OPTIONAL_HEADER64 opt64)
+//     {
+//         mOptHdr64 = opt64;
+//     }
+
+// private:
+//     PIMAGE_OPTIONAL_HEADER32 mOptHdr32;
+//     PIMAGE_OPTIONAL_HEADER64 mOptHdr64;
+// };
+
+// enum my_pe_machine_type
+// {
+//     MACHINE_UNKNOWN = 0x0,
+//     AM33 = 0x1d3,
+//     AMD64 = 0x8664,
+//     ARM = 0x1c0,
+//     ARM64 = 0xaa64,
+//     ARMNT = 0x1c4,
+//     EBC = 0xebc,
+//     I386 = 0x14c,
+//     IA64 = 0x200,
+//     M32R = 0x9041,
+//     MIPS16 = 0x266,
+//     MIPSFPU = 0x366,
+//     MIPSFPU16 = 0x466,
+//     POWERPC = 0x1f0,
+//     POWERPCFP = 0x1f1,
+//     R4000 = 0x166,
+//     RISCV32 = 0x5032,
+//     RISCV64 = 0x5064,
+//     RISCV128 = 0x5128,
+//     SH3 = 0x1a2,
+//     SH3DSP = 0x1a3,
+//     SH4 = 0x1a6,
+//     SH5 = 0x1a8,
+//     THUMB = 0x1c2,
+//     WCEMIPSV2 = 0x169,
+// };
+
+// class PE
+// {
+// public:
+
+//     PE() = default;
+//     ~PE() = default;
+
+//     template <typename T>
+//     T load_from_file(std::string path, bool file)
+//     {
+//         std::ofstream fil(path, std::ios::binary);
+//         if (!fil.is_open()) {
+//             return -1;
+//         }
+//         file ? fil.write(mFileBuf.data(), mFileBuf.size())
+//              : fil.write(mImageBuf.data(), mImageBuf.size());
+//         fil.close();
+//         int typ = 0;
+//         file ? typ = parse_pe(mFileBuf, mFileBuf.size(), true)
+//              : typ = parse_pe(mImageBuf, mImageBuf.size(), false);
+        
+//         if(typ == 0) // exe
+//         {
+//             PE_EXE exe(1);
+//             return T(exe);
+//         }
+        
+//         return T(-1);
+//     }
+//     bool load_from_buf(char* buf, size_t size, bool file);
+
+// private:
+    
+//     int parse_pe(std::vector<char> buf, size_t size, bool file)
+//     {
+//         int typ = 0;
+//         mDosHdr = reinterpret_cast<PIMAGE_DOS_HEADER>(mFileBuf.data());
+//         mFileHdr = reinterpret_cast<PIMAGE_FILE_HEADER>(reinterpret_cast<char*>(mFileBuf.data()) + mDosHdr->e_lfanew);
+//         if(mFileHdr->Machine == my_pe_machine_type::I386)
+//         {
+//             PIMAGE_OPTIONAL_HEADER32 opt32 = reinterpret_cast<PIMAGE_OPTIONAL_HEADER32>(reinterpret_cast<char*>(mFileHdr) + sizeof(IMAGE_FILE_HEADER));
+//             mOptHdr.set_opt32(opt32);
+//         }
+//         else if(mFileHdr->Machine == my_pe_machine_type::AMD64)
+//         {
+//             PIMAGE_OPTIONAL_HEADER64 opt64 = reinterpret_cast<PIMAGE_OPTIONAL_HEADER64>(reinterpret_cast<char*>(mFileHdr) + sizeof(IMAGE_FILE_HEADER));
+//             mOptHdr.set_opt64(opt64);
+//         }
+//         return typ;
+//     }
+
+//     PIMAGE_DOS_HEADER    mDosHdr;
+//     PIMAGE_FILE_HEADER   mFileHdr;
+//     PE_OPT               mOptHdr;
+
+//     FILE                 mFile;
+
+//     std::vector<char> mFileBuf;
+//     std::vector<char> mImageBuf;
+// };
+// }
+
+// #endif
 
 #endif
