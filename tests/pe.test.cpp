@@ -109,11 +109,6 @@ TEST_CASE("test_search_golang_runtime")
     DWORD textRVA = pe_get_section_rva32(pImageBuffer, dwIdx);
     std::string keyword("83 EC ?? 90 8D 05 ?? ?? ?? ?? 89 04 24 E8 ?? ?? ?? ?? 8D 05 ?? ?? ?? ?? 89 04 24 C7 44 24 04 01 00 00 00 E8 ?? ?? ?? ?? 8B 05 ?? ?? ?? ?? 89 04 24 8B 44 24 10 89 44 24 04 E8 ?? ?? ?? ?? 83 C4 ?? C3");
     void* retFind = NULL;
-
-    printf("textRVA: %x\r\n", textRVA);
-    printf("dwIdx: %x\r\n", dwIdx);
-    printf("ppe32->section_header[dwIdx]->virtual_size: %x\r\n", ppe32->section_header[dwIdx]->virtual_size);
-
     bool IsFound = SearchCode(
         pImageBuffer + textRVA, 
         pImageBuffer + textRVA + ppe32->section_header[dwIdx]->virtual_size,

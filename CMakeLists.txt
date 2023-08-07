@@ -33,7 +33,7 @@ elseif(${CMAKE_GENERATOR} MATCHES "Visual Studio")
 endif()
 
 # 定义输入变量
-file(GLOB PROJECT_INCLUDE_DIR "${PROJECT_SOURCE_DIR}/include")
+file(GLOB PROJECT_INCLUDE_DIR "${PROJECT_SOURCE_DIR}/include/pe_lib")
 if(NOT EXISTS "${PROJECT_INCLUDE_DIR}")
     message(FATAL_ERROR "- Target include path is not find: ${PROJECT_INCLUDE_DIR}")
 endif()
