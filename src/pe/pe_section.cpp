@@ -16,6 +16,7 @@ DWORD pe_get_section_rva32(PCHAR pBuffer, DWORD dwIdx)
 
     if(dwIdx >= 0 && dwIdx < pNts->FileHeader.NumberOfSections)
         return pSecs[dwIdx].VirtualAddress;
+    return -1;
 }
 
 DWORD pe_get_section_idx32(PCHAR pBuffer, PCHAR pSecName)

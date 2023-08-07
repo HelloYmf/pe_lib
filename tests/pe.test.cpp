@@ -96,4 +96,31 @@ TEST_CASE("test_get_section_idx_by_name")
     pe32_t* ppe32 = (pe32_t*)pe_parse_headers(fpe32);
     DWORD idx = pe_get_section_idx32(ppe32->pe_file_buffer, (PCHAR)".text");
     REQUIRE(idx == 1);
+    pe_free_buffer(ppe32->pe_file_buffer);
+}
+
+TEST_CASE("test_search_golang_runtime")
+{
+    FILE* fpe32 = pe_open("../../tests/examples/search_go_runtime_32.exe");
+    REQUIRE(fpe32 != NULL);
+    pe32_t* ppe32 = (pe32_t*)pe_parse_headers(fpe32);
+    char* pImageBuffer = pe_get_image_buffer(ppe32->pe_file_buffer);
+    DWORD dwIdx = pe_get_section_idx32(pImageBuffer, (PCHAR)".text");
+    DWORD textRVA = pe_get_section_rva32(pImageBuffer, dwIdx);
+    std::string keyword("83 EC ?? 90 8D 05 ?? ?? ?? ?? 89 04 24 E8 ?? ?? ?? ?? 8D 05 ?? ?? ?? ?? 89 04 24 C7 44 24 04 01 00 00 00 E8 ?? ?? ?? ?? 8B 05 ?? ?? ?? ?? 89 04 24 8B 44 24 10 89 44 24 04 E8 ?? ?? ?? ?? 83 C4 ?? C3");
+    void* retFind = NULL;
+
+    printf("textRVA: %x\r\n", textRVA);
+    printf("dwIdx: %x\r\n", dwIdx);
+    printf("ppe32->section_header[dwIdx]->virtual_size: %x\r\n", ppe32->section_header[dwIdx]->virtual_size);
+
+    bool IsFound = SearchCode(
+        pImageBuffer + textRVA, 
+        pImageBuffer + textRVA + ppe32->section_header[dwIdx]->virtual_size,
+        keyword,
+        1,
+        retFind
+    );
+    REQUIRE(IsFound == true);
+    REQUIRE((char*)retFind - pImageBuffer == 0x30360);
 }
