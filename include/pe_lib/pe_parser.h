@@ -15,6 +15,8 @@ bool pe_write(const char* filename, char* buffer, size_t size);
 pe_t* pe_parse_headers(FILE* executable);
 void pe_free_headers(pe_t* pe);
 
+bool pe_close_alsr(char* pBuffer);
+
 // pe拉伸
 char* pe_get_image_buffer(char* pBase);
 void pe_free_buffer(char* buffer);
