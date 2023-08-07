@@ -7,7 +7,10 @@ BOOL pe_insert_tls(PCHAR pImageBuffer, DWORD dwFunRva)
 
     DWORD dwIDx = pe_get_section_idx32(pImageBuffer, (char*)".data");
     DWORD startRVA = 0;
-    pe_extend_section32(pImageBuffer, dwIDx, 0x1000, &startRVA);
+    if(!pe_extend_section32(pImageBuffer, dwIDx, 0x1000, &startRVA))
+    {
+        return false;
+    }
 
     *(int*)(pImageBuffer + startRVA + 0x8) = startRVA + 0x10 + pNts->OptionalHeader.ImageBase;
     *(int*)(pImageBuffer + startRVA + 0xC) = dwFunRva + pNts->OptionalHeader.ImageBase;
@@ -16,4 +19,5 @@ BOOL pe_insert_tls(PCHAR pImageBuffer, DWORD dwFunRva)
     int* pTlsDir = (int*)&(pNts->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_TLS].VirtualAddress);
     *pTlsDir = startRVA;
     *(pTlsDir+1) = 0x18;
+    return true;
 }
