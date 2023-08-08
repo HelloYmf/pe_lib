@@ -5,7 +5,7 @@ PCHAR pe_insert_tls(PCHAR pImageBuffer, DWORD dwFunRva)
     PIMAGE_DOS_HEADER pDos = (PIMAGE_DOS_HEADER)(pImageBuffer);
 	PIMAGE_NT_HEADERS pNts = (PIMAGE_NT_HEADERS)((ULONG_PTR)pImageBuffer + pDos->e_lfanew);
 
-    DWORD dwIDx = pe_get_section_idx32(pImageBuffer, (char*)".idata");
+    DWORD dwIDx = pe_get_section_idx32(pImageBuffer, (char*)".rsrc") - 1;
     DWORD startRVA = 0;
     PCHAR pNewImageBuffer = pe_extend_section32(pImageBuffer, dwIDx, 0x1000, &startRVA);
     if(!pNewImageBuffer)
