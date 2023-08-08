@@ -340,14 +340,14 @@ PCHAR pe_extend_section32(PCHAR pOldImageBuffer, DWORD dwIdx, DWORD dwSize, DWOR
                 {
                     if(second_name_entry->NameIsString)
                     {
-                        PIMAGE_RESOURCE_DIR_STRING_U wname = (PIMAGE_RESOURCE_DIR_STRING_U)(resouce_base + first_name_entry->NameOffset);
+                       PIMAGE_RESOURCE_DIR_STRING_U wname = (PIMAGE_RESOURCE_DIR_STRING_U)(resouce_base + second_name_entry->NameOffset);
                         printf("second resource name type: %S\r\n", wname->NameString);
                         printf("\r\n");
                     }
 
                     if(second_name_entry->DataIsDirectory)
                     {
-                        PIMAGE_RESOURCE_DIRECTORY third_dir = (PIMAGE_RESOURCE_DIRECTORY)(resouce_base + first_name_entry->OffsetToDirectory);
+                        PIMAGE_RESOURCE_DIRECTORY third_dir = (PIMAGE_RESOURCE_DIRECTORY)(resouce_base + second_name_entry->OffsetToDirectory);
                         uint32_t third_name_num = third_dir->NumberOfNamedEntries;
                         uint32_t third_bak_name_num = third_name_num;
                         uint32_t third_id_num = third_dir->NumberOfIdEntries;
@@ -458,14 +458,14 @@ PCHAR pe_extend_section32(PCHAR pOldImageBuffer, DWORD dwIdx, DWORD dwSize, DWOR
 
                     if(second_name_entry->NameIsString)
                     {
-                        PIMAGE_RESOURCE_DIR_STRING_U wname = (PIMAGE_RESOURCE_DIR_STRING_U)(resouce_base + first_name_entry->NameOffset);
+                        PIMAGE_RESOURCE_DIR_STRING_U wname = (PIMAGE_RESOURCE_DIR_STRING_U)(resouce_base + second_name_entry->NameOffset);
                         printf("second resource name type: %S\r\n", wname->NameString);
                         printf("\r\n");
                     }
 
                     if(second_name_entry->DataIsDirectory)
                     {
-                        PIMAGE_RESOURCE_DIRECTORY third_dir = (PIMAGE_RESOURCE_DIRECTORY)(resouce_base + first_name_entry->OffsetToDirectory);
+                        PIMAGE_RESOURCE_DIRECTORY third_dir = (PIMAGE_RESOURCE_DIRECTORY)(resouce_base + second_name_entry->OffsetToDirectory);
                         uint32_t third_name_num = third_dir->NumberOfNamedEntries;
                         uint32_t third_bak_name_num = third_name_num;
                         uint32_t third_id_num = third_dir->NumberOfIdEntries;
