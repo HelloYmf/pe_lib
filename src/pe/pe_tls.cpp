@@ -16,7 +16,7 @@ PCHAR pe_insert_tls(PCHAR pImageBuffer, DWORD dwFunRva)
 
     *(int*)(pNewImageBuffer + startRVA + 0x8) = startRVA + 0x10 + pNewNts->OptionalHeader.ImageBase;
     *(int*)(pNewImageBuffer + startRVA + 0xC) = startRVA + 0x20 + pNewNts->OptionalHeader.ImageBase;
-    *(int*)(pNewImageBuffer + startRVA + 0x20) = &(dwFunRva + pNewNts->OptionalHeader.ImageBase);
+    *(int*)(pNewImageBuffer + startRVA + 0x20) = dwFunRva + pNewNts->OptionalHeader.ImageBase;
 
     // 修改目录表
     int* pTlsDir = (int*)&(pNewNts->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_TLS].VirtualAddress);

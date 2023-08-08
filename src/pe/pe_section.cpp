@@ -323,7 +323,7 @@ PCHAR pe_extend_section32(PCHAR pOldImageBuffer, DWORD dwIdx, DWORD dwSize, DWOR
             if(first_name_entry->NameIsString)
             {
                 PIMAGE_RESOURCE_DIR_STRING_U wname = (PIMAGE_RESOURCE_DIR_STRING_U)(resouce_base + first_name_entry->NameOffset);
-                printf("resource name type: %S\r\n", wname->NameString);
+                printf("first resource name type: %S\r\n", wname->NameString);
                 printf("\r\n");
             }
             if(first_name_entry->DataIsDirectory)
@@ -338,7 +338,47 @@ PCHAR pe_extend_section32(PCHAR pOldImageBuffer, DWORD dwIdx, DWORD dwSize, DWOR
 
                 while(second_name_num)
                 {
-                    // 这个为name的很少见
+                    if(second_name_entry->NameIsString)
+                    {
+                        PIMAGE_RESOURCE_DIR_STRING_U wname = (PIMAGE_RESOURCE_DIR_STRING_U)(resouce_base + first_name_entry->NameOffset);
+                        printf("second resource name type: %S\r\n", wname->NameString);
+                        printf("\r\n");
+                    }
+
+                    if(second_name_entry->DataIsDirectory)
+                    {
+                        PIMAGE_RESOURCE_DIRECTORY third_dir = (PIMAGE_RESOURCE_DIRECTORY)(resouce_base + first_name_entry->OffsetToDirectory);
+                        uint32_t third_name_num = third_dir->NumberOfNamedEntries;
+                        uint32_t third_bak_name_num = third_name_num;
+                        uint32_t third_id_num = third_dir->NumberOfIdEntries;
+
+                        PIMAGE_RESOURCE_DIRECTORY_ENTRY third_name_entry = (PIMAGE_RESOURCE_DIRECTORY_ENTRY)((uint32_t)third_dir + sizeof(IMAGE_RESOURCE_DIRECTORY));
+                    
+                        while(third_name_num)
+                        {
+                            if(!third_name_entry->DataIsDirectory)
+                            {
+                                PIMAGE_RESOURCE_DATA_ENTRY data = (PIMAGE_RESOURCE_DATA_ENTRY)(resouce_base + third_name_entry->OffsetToData);
+                                data->OffsetToData += (data->OffsetToData > fix_rva ? new_rva_size : 0);
+                            }
+                            // 是目录就出错了
+                            third_name_entry++;
+                            third_name_num--;
+                        }
+
+                        PIMAGE_RESOURCE_DIRECTORY_ENTRY third_id_entry = (PIMAGE_RESOURCE_DIRECTORY_ENTRY)((uint32_t)third_dir + sizeof(IMAGE_RESOURCE_DIRECTORY) + third_bak_name_num * sizeof(IMAGE_RESOURCE_DIRECTORY_ENTRY));
+                        while(third_id_num)
+                        {
+                            if(!third_id_entry->DataIsDirectory)
+                            {
+                                PIMAGE_RESOURCE_DATA_ENTRY data = (PIMAGE_RESOURCE_DATA_ENTRY)(resouce_base + third_id_entry->OffsetToData);
+                                data->OffsetToData += (data->OffsetToData > fix_rva ? new_rva_size : 0);
+                            }
+                            // 是目录就出错了
+                            third_id_entry++;
+                            third_id_num--;
+                        }
+                    }
                     
                     second_name_entry++;
                     second_name_num--;
@@ -360,7 +400,11 @@ PCHAR pe_extend_section32(PCHAR pOldImageBuffer, DWORD dwIdx, DWORD dwSize, DWOR
                         PIMAGE_RESOURCE_DIRECTORY_ENTRY third_name_entry = (PIMAGE_RESOURCE_DIRECTORY_ENTRY)((uint32_t)third_dir + sizeof(IMAGE_RESOURCE_DIRECTORY));
                         while(third_name_num)
                         {
-                            
+                            if(!third_name_entry->DataIsDirectory)
+                            {
+                                PIMAGE_RESOURCE_DATA_ENTRY data = (PIMAGE_RESOURCE_DATA_ENTRY)(resouce_base + third_name_entry->OffsetToData);
+                                data->OffsetToData += (data->OffsetToData > fix_rva ? new_rva_size : 0);
+                            }
                             third_name_entry++;
                             third_name_num--;
                         }
@@ -412,6 +456,47 @@ PCHAR pe_extend_section32(PCHAR pOldImageBuffer, DWORD dwIdx, DWORD dwSize, DWOR
                 while(second_name_num)
                 {
 
+                    if(second_name_entry->NameIsString)
+                    {
+                        PIMAGE_RESOURCE_DIR_STRING_U wname = (PIMAGE_RESOURCE_DIR_STRING_U)(resouce_base + first_name_entry->NameOffset);
+                        printf("second resource name type: %S\r\n", wname->NameString);
+                        printf("\r\n");
+                    }
+
+                    if(second_name_entry->DataIsDirectory)
+                    {
+                        PIMAGE_RESOURCE_DIRECTORY third_dir = (PIMAGE_RESOURCE_DIRECTORY)(resouce_base + first_name_entry->OffsetToDirectory);
+                        uint32_t third_name_num = third_dir->NumberOfNamedEntries;
+                        uint32_t third_bak_name_num = third_name_num;
+                        uint32_t third_id_num = third_dir->NumberOfIdEntries;
+
+                        PIMAGE_RESOURCE_DIRECTORY_ENTRY third_name_entry = (PIMAGE_RESOURCE_DIRECTORY_ENTRY)((uint32_t)third_dir + sizeof(IMAGE_RESOURCE_DIRECTORY));
+                    
+                        while(third_name_num)
+                        {
+                            if(!third_name_entry->DataIsDirectory)
+                            {
+                                PIMAGE_RESOURCE_DATA_ENTRY data = (PIMAGE_RESOURCE_DATA_ENTRY)(resouce_base + third_name_entry->OffsetToData);
+                                data->OffsetToData += (data->OffsetToData > fix_rva ? new_rva_size : 0);
+                            }
+                            third_name_entry++;
+                            third_name_num--;
+                        }
+
+                        PIMAGE_RESOURCE_DIRECTORY_ENTRY third_id_entry = (PIMAGE_RESOURCE_DIRECTORY_ENTRY)((uint32_t)third_dir + sizeof(IMAGE_RESOURCE_DIRECTORY) + third_bak_name_num * sizeof(IMAGE_RESOURCE_DIRECTORY_ENTRY));
+                        while(third_id_num)
+                        {
+                            if(!third_id_entry->DataIsDirectory)
+                            {
+                                PIMAGE_RESOURCE_DATA_ENTRY data = (PIMAGE_RESOURCE_DATA_ENTRY)(resouce_base + third_id_entry->OffsetToData);
+                                data->OffsetToData += (data->OffsetToData > fix_rva ? new_rva_size : 0);
+                                // printf("data rva: %x, size: %x\r\n", data->OffsetToData, data->Size);
+                            }
+                            // 是目录就出错了
+                            third_id_entry++;
+                            third_id_num--;
+                        }
+                    }
 
                     second_name_entry++;
                     second_name_num--;
@@ -433,7 +518,11 @@ PCHAR pe_extend_section32(PCHAR pOldImageBuffer, DWORD dwIdx, DWORD dwSize, DWOR
                         PIMAGE_RESOURCE_DIRECTORY_ENTRY third_name_entry = (PIMAGE_RESOURCE_DIRECTORY_ENTRY)((uint32_t)third_dir + sizeof(IMAGE_RESOURCE_DIRECTORY));
                         while(third_name_num)
                         {
-                            
+                            if(!third_name_entry->DataIsDirectory)
+                            {
+                                PIMAGE_RESOURCE_DATA_ENTRY data = (PIMAGE_RESOURCE_DATA_ENTRY)(resouce_base + third_name_entry->OffsetToData);
+                                data->OffsetToData += (data->OffsetToData > fix_rva ? new_rva_size : 0);
+                            }
                             third_name_entry++;
                             third_name_num--;
                         }
