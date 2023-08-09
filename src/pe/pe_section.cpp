@@ -205,7 +205,7 @@ PCHAR pe_extend_section32(PCHAR pOldImageBuffer, DWORD dwIdx, DWORD dwSize, DWOR
 
             // 因为在文件状态OtiginalThunk跟FirstThunk指向的是同一个结构，所以只需要修复一次就好了
             PIMAGE_THUNK_DATA pOriginalThunk = (PIMAGE_THUNK_DATA)(new_image_buffer + pNewImpDesciptor->OriginalFirstThunk);
-            while ( pOriginalThunk->u1.Function)
+            while ( pOriginalThunk->u1.Function && !(pOriginalThunk->u1.Ordinal & 0x7FFFF))
             {
                 pOriginalThunk->u1.AddressOfData += pOriginalThunk->u1.AddressOfData >= fix_rva
                     ? new_rva_size : 0;
